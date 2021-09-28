@@ -23,11 +23,11 @@ Run `descriptives.rmd`. The results will be stored in the `descriptives/` folder
 
 ## Simulation-based study
 
-Run `simulation_check.rmd` to reproduce the results from our simulation-based study`. Files of the pre-computed models are uploaded in order to run this study. You can also run the simulation yourself (see below). The results from the simulation-based study are stored in `simulations/theta_j_sim/scenario_1`.
+Run `simulation_check.rmd` to reproduce the results from our simulation-based study. Estimation results for theta_m and theta_j are uploaded in order to reprocude the results, but not the individual models to reduce storage. You can also run the simulation yourself (see below). The results from the simulation-based study are stored in `simulations/theta_j_sim/scenario_1`.
 
 ## Main analysis 
 
-Run `analysis_data_brauner.rmd` to reproduce the results from our analysis. Files of the pre-computed models are uploaded in order to run the analysis. You can also run the models yourself (see below). The results from the analysis are stored in `results/brauner/model_name`. 
+Run `analysis_data_brauner.rmd` to reproduce the results from our analysis. Files of the pre-computed models are uploaded in order to run the analysis, except for the sensitivity analysis in order to reduce storage. You can also run the models yourself (see below). The results from the analysis are stored in `results/brauner/model_name`. 
 
 ## Models
 
