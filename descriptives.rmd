@@ -1,0 +1,72 @@
+---
+title: "Descriptives"
+author: "Nicolas Banholzer"
+date: "1/20/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+source("utils/plotting.R")
+```
+
+## Predictors
+
+```{r}
+predictors <- read_csv("data/predictors_brauner.csv")
+
+pred_vars <- colnames(predictors)
+pred_vars <- pred_vars[!grepl("country|pop$", pred_vars)]
+names(pred_vars) <- c("GDP per capita", 
+                     "Population ages 0-14", 
+                     "Population ages 15-64", 
+                     "Population ages 65+", 
+                     "Informal employment", 
+                     "Average household size", 
+                     "Health expenditure",
+                     "Urban population", 
+                     "Employment in services", 
+                     "Government Effectiveness",
+                     "Global Health Security Index", 
+                     "Population density")
+```
+
+### Correlation
+
+```{r}
+v1 <- character()
+v2 <- character()
+r <- numeric()
+n <- 0
+for (i in 1:length(pred_vars)) {
+  for (k in i:length(pred_vars)) {
+    n <- n +1
+    v1[n] <- names(pred_vars)[i]
+    v2[n] <- names(pred_vars)[k]
+    if (i==k) {
+      r[n] <- NA
+    } else {
+      r[n] <- round(cor(predictors[[pred_vars[i]]], predictors[[pred_vars[k]]], use = "complete.obs"), 2)
+    }
+  }
+}
+
+corDF <- rbind(data.frame(rhs = v1, lhs = v2, r = r),data.frame(rhs = v2, lhs = v1, r = r)) %>%
+  mutate(rhs = factor(rhs, levels = names(pred_vars)),
+         lhs = factor(lhs, levels = names(pred_vars)))
+
+corDF_pl <- corDF %>%
+  ggplot(aes(x = rhs, y = lhs, fill = r)) +
+  geom_tile() +
+  geom_text(aes(label = r), size = 8 / cm(1)) +
+  labs(fill = "Pearson's r") +
+  scale_fill_gradient2(limits = c(-1, 1), na.value = "grey") +
+  theme_nature() +
+  theme(axis.title = element_blank(), axis.text.x = element_text(angle = 90))
+
+save_plot(corDF_pl, "descriptives/pred_cor_plot.pdf", w = 16, h = 16)
+```

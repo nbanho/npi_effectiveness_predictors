@@ -1,0 +1,215 @@
+country;gov_eff;reg_qual;rule_of_law
+Aruba;1.03;0.86;1.26
+Andorra;1.91;1.23;1.58
+Afghanistan;-1.46;-1.12;-1.71
+Angola;-1.12;-0.89;-1.05
+Anguilla;0.82;0.85;0.36
+Albania;-0.06;0.27;-0.41
+Netherlands Antilles (former);NA;NA;NA
+United Arab Emirates;1.38;0.98;0.84
+Argentina;-0.09;-0.49;-0.43
+Armenia;-0.07;0.25;-0.13
+American Samoa;0.54;-0.30;1.34
+Antigua and Barbuda;0.00;0.49;0.41
+Australia;1.57;1.87;1.73
+Austria;1.49;1.46;1.88
+Azerbaijan;-0.14;-0.23;-0.58
+Burundi;-1.33;-0.95;-1.43
+Belgium;1.03;1.29;1.36
+Benin;-0.44;-0.38;-0.66
+Burkina Faso;-0.76;-0.38;-0.43
+Bangladesh;-0.74;-0.93;-0.64
+Bulgaria;0.34;0.53;0.04
+Bahrain;0.30;0.49;0.49
+Bahamas, The;0.49;-0.05;0.08
+Bosnia and Herzegovina;-0.63;-0.19;-0.23
+Belarus;-0.18;-0.54;-0.79
+Belize;-0.68;-0.54;-0.78
+Bermuda;1.36;0.85;0.85
+Bolivia;-0.70;-0.99;-1.12
+Brazil;-0.19;-0.18;-0.18
+Barbados;0.63;0.41;0.36
+Brunei Darussalam;1.32;0.63;0.61
+Bhutan;0.31;-0.33;0.59
+South Sudan;-2.45;-2.05;-1.97
+Botswana;0.43;0.37;0.50
+Central African Republic;-1.75;-1.37;-1.73
+Canada;1.73;1.72;1.76
+Switzerland;1.95;1.66;1.91
+Chile;1.06;1.22;1.07
+China;0.52;-0.24;-0.27
+Côte d'Ivoire;-0.48;-0.24;-0.57
+Cameroon;-0.81;-0.83;-1.12
+Congo, Rep.;-1.39;-1.30;-1.15
+Cook Islands;NA;NA;NA
+Colombia;0.07;0.40;-0.42
+Comoros;-1.67;-1.12;-1.09
+Cape Verde;0.29;-0.22;0.52
+Costa Rica;0.42;0.50;0.54
+Cuba;-0.17;-1.49;-0.32
+Cayman Islands;1.17;0.98;0.77
+Cyprus;0.99;1.01;0.76
+Czech Republic;0.89;1.25;1.05
+Germany;1.59;1.72;1.62
+Djibouti;-0.71;-0.77;-0.91
+Dominica;-0.26;0.10;0.69
+Denmark;1.94;1.57;1.90
+Dominican Republic;-0.36;-0.05;-0.35
+Algeria;-0.52;-1.30;-0.82
+Ecuador;-0.40;-0.82;-0.58
+Egypt, Arab Rep.;-0.42;-0.83;-0.42
+Eritrea;-1.76;-2.27;-1.60
+Spain;1.00;1.05;0.98
+Estonia;1.17;1.59;1.28
+Ethiopia;-0.63;-0.89;-0.47
+Finland;1.93;1.85;2.02
+Fiji;0.20;-0.22;-0.03
+France;1.38;1.44;1.41
+Micronesia, Fed. Sts.;-0.19;-0.96;0.02
+Gabon;-0.90;-0.96;-0.73
+United Kingdom;1.44;1.63;1.60
+Georgia;0.83;1.12;0.31
+Ghana;-0.21;-0.11;0.05
+Guinea;-0.78;-0.77;-1.21
+Gambia, The;-0.63;-0.66;-0.37
+Guinea-Bissau;-1.51;-1.23;-1.26
+Equatorial Guinea;-1.34;-1.52;-1.42
+Greece;0.41;0.53;0.20
+Grenada;-0.14;-0.31;0.18
+Greenland;0.81;1.36;1.75
+Guatemala;-0.68;-0.22;-1.05
+French Guiana;1.39;1.31;1.17
+Guam;0.27;0.08;1.34
+Guyana;-0.39;-0.62;-0.43
+Hong Kong SAR, China;1.74;1.98;1.60
+Honduras;-0.61;-0.49;-1.01
+Croatia;0.41;0.59;0.37
+Haiti;-2.02;-1.26;-0.97
+Hungary;0.50;0.60;0.49
+Indonesia;0.18;-0.09;-0.34
+India;0.17;-0.16;-0.03
+Ireland;1.28;1.60;1.39
+Iran, Islamic Rep.;-0.55;-1.42;-0.75
+Iraq;-1.34;-1.18;-1.72
+Iceland;1.52;1.37;1.77
+Israel;1.33;1.28;1.05
+Italy;0.46;0.95;0.28
+Jamaica;0.50;0.17;-0.31
+Jordan;0.10;0.03;0.14
+Japan;1.59;1.33;1.54
+Kazakhstan;0.12;0.14;-0.43
+Kenya;-0.38;-0.28;-0.45
+Kyrgyz Republic;-0.68;-0.35;-0.89
+Cambodia;-0.58;-0.57;-0.94
+Kiribati;-0.24;-0.62;0.74
+St. Kitts and Nevis;0.54;0.50;0.48
+Korea, Rep.;1.38;1.07;1.19
+Kuwait;0.02;0.06;0.22
+Lao PDR;-0.78;-0.71;-0.94
+Lebanon;-0.83;-0.43;-0.86
+Liberia;-1.38;-0.98;-1.00
+Libya;-1.92;-2.35;-1.85
+St. Lucia;0.23;0.23;0.57
+Liechtenstein;1.70;1.54;1.68
+Sri Lanka;-0.11;-0.18;-0.01
+Lesotho;-0.83;-0.54;-0.38
+Lithuania;1.04;1.16;1.02
+Luxembourg;1.73;1.70;1.79
+Latvia;1.11;1.19;1.01
+Kosovo;-0.35;-0.35;-0.39
+Macao SAR, China;1.17;1.63;0.92
+Morocco;-0.12;-0.21;-0.14
+Monaco;NA;NA;NA
+Moldova;-0.38;0.01;-0.37
+Madagascar;-1.14;-0.73;-1.01
+Maldives;-0.19;-0.48;-0.41
+Mexico;-0.16;0.10;-0.66
+Marshall Islands;-1.47;-1.12;-0.03
+North Macedonia;0.00;0.51;-0.24
+Mali;-1.06;-0.57;-0.83
+Malta;0.86;0.96;0.95
+Myanmar;-1.15;-0.76;-1.06
+Mongolia;-0.19;-0.01;-0.27
+Montenegro;0.16;0.37;0.10
+Mozambique;-0.82;-0.72;-1.02
+Mauritania;-0.50;-0.76;-0.58
+Martinique;1.09;1.23;0.60
+Mauritius;0.87;1.00;0.76
+Malawi;-0.75;-0.70;-0.33
+Malaysia;1.00;0.67;0.59
+Namibia;0.10;-0.11;0.31
+Niger;-0.80;-0.67;-0.53
+Nigeria;-1.09;-0.86;-0.90
+Nicaragua;-0.77;-0.69;-1.18
+Niue;NA;NA;NA
+Netherlands;1.80;1.86;1.81
+Norway;1.86;1.80;1.98
+Nepal;-1.05;-0.70;-0.54
+Nauru;-0.13;-0.03;-0.76
+New Zealand;1.67;1.88;1.88
+Oman;0.26;0.29;0.55
+Pakistan;-0.68;-0.64;-0.67
+Panama;0.07;0.36;-0.12
+Palau;-0.05;-0.01;0.31
+Peru;-0.07;0.56;-0.49
+Philippines;0.05;0.01;-0.48
+Papua New Guinea;-0.81;-0.54;-0.80
+Poland;0.60;1.01;0.45
+Puerto Rico;-0.16;0.73;0.59
+Korea, Dem. Rep.;-1.40;-2.40;-1.65
+Portugal;1.15;0.97;1.14
+Paraguay;-0.53;-0.20;-0.56
+Qatar;0.71;0.68;0.73
+Réunion;1.09;1.23;0.85
+Romania;-0.28;0.46;0.36
+Russian Federation;0.15;-0.43;-0.72
+Rwanda;0.19;0.08;0.08
+Samoa;0.44;-0.22;1.08
+Saudi Arabia;0.31;-0.07;0.17
+Sudan;-1.62;-1.67;-1.14
+Senegal;-0.06;-0.11;-0.19
+Singapore;2.22;2.16;1.88
+Solomon Islands;-1.00;-0.83;-0.14
+Sierra Leone;-1.13;-0.88;-0.77
+El Salvador;-0.47;0.02;-0.76
+San Marino;NA;NA;NA
+Somalia;-2.24;-2.20;-2.35
+São Tomé and Principe;-0.63;-0.91;-0.68
+Suriname;-0.59;-0.68;-0.06
+Slovak Republic;0.67;1.01;0.56
+Slovenia;1.08;1.01;1.12
+Sweden;1.83;1.80;1.91
+Swaziland;-0.68;-0.61;-0.50
+Seychelles;0.52;-0.15;0.17
+Syrian Arab Republic;-1.71;-1.76;-2.08
+Chad;-1.57;-1.12;-1.28
+Togo;-0.92;-0.68;-0.59
+Thailand;0.36;0.12;0.10
+Tajikistan;-1.05;-1.01;-1.23
+Turkmenistan;-1.16;-1.96;-1.41
+Timor-Leste;-0.88;-0.78;-1.11
+Tonga;0.16;-0.33;0.46
+Trinidad and Tobago;0.10;-0.15;-0.12
+Tunisia;-0.10;-0.44;0.06
+Turkey;0.05;-0.01;-0.28
+Tuvalu;-0.65;-0.56;0.48
+Taiwan, China;1.44;1.40;1.14
+Tanzania;-0.88;-0.64;-0.58
+Uganda;-0.59;-0.37;-0.31
+Ukraine;-0.30;-0.26;-0.70
+Uruguay;0.70;0.51;0.62
+United States;1.49;1.35;1.46
+Uzbekistan;-0.51;-0.99;-1.05
+St. Vincent and the Grenadines;0.23;0.21;0.45
+Venezuela, RB;-1.66;-2.36;-2.32
+Virgin Islands (U.S.);0.82;1.23;1.09
+Vietnam;0.04;-0.26;-0.02
+Vanuatu;-0.55;-0.46;0.18
+West Bank and Gaza;-0.74;0.03;-0.49
+Jersey, Channel Islands;1.24;0.92;1.75
+Yemen, Rep.;-2.28;-1.66;-1.77
+Serbia;0.02;0.11;-0.12
+South Africa;0.37;0.16;-0.08
+Congo, Dem. Rep.;-1.63;-1.51;-1.79
+Zambia;-0.68;-0.55;-0.46
+Zimbabwe;-1.21;-1.46;-1.26

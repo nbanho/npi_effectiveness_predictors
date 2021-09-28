@@ -1,0 +1,361 @@
+---
+title: "Analyse"
+author: "Nicolas Banholzer"
+date: "1/21/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# libraries
+library(tidyverse)
+library(tidybayes)
+library(bayesplot)
+library(rstan)
+
+# helper functions
+source("utils/covid.R")
+source("utils/covid_posterior_plots.R")
+source("utils/tex.R")
+source("utils/plotting.R")
+source("utils/bayes.R")
+source("utils/simulation.R")
+
+# additional functions
+ci_interval <- mean_qi # 95% CrI
+```
+
+```{r}
+# data
+df <- read_csv("data/data_brauner_prep.csv") 
+
+# NPI names
+npi_names <- colnames(dplyr::select(df, -country_id, -country, -date, -cases, -new_cases))
+
+# create data input for stan
+stanDF <- make_stan_dat(dat = df , npis = npi_names)
+
+# predictors
+predictors <- read_csv("data/predictors_brauner.csv")
+pred_vars <- colnames(predictors)
+pred_vars <- pred_vars[!grepl("country|pop$", pred_vars)]
+names(pred_vars) <- c("GDP per capita", 
+                     "Population ages 0-14", 
+                     "Population ages 15-64", 
+                     "Population ages 65+", 
+                     "Informal employment", 
+                     "Average household size", 
+                     "Health expenditure",
+                     "Urban population", 
+                     "Employment in services", 
+                     "Government Effectiveness",
+                     "Global Health Security Index", 
+                     "Population density")
+
+# country identifier
+cid_country <- df %>% group_by(country) %>% slice(1) %>% ungroup %>% dplyr::select(country, country_id)
+```
+
+
+## Base
+
+Model with just cross-country average NPI effects theta_m
+
+### Summary
+
+```{r}
+# load model
+base <- read_cmdstan_csv(list.files("fitted-models/brauner/base/", pattern = "base-.*.csv", full.names = T))
+
+# posterior summary of main model parameters
+post_summary(base, c("alpha_0", "lambda", "tau", "mu_p_in", "sigma_p_in", "phi_new_cases", "phi_new_infections"))
+post_summary(base, paste0("theta_m[", 1:stanDF$M, "]"))
+
+# plot of posterior p_in (time from infection to reporting of a new case)
+plot_p_in(stanDF, base, "results/brauner/base/p_in.pdf")
+```
+
+### NPI effects
+
+```{r}
+# plot posterior CrI of theta_m
+plot_theta_m(stanDF, npi_names, base, "results/brauner/base/theta_m.pdf")
+```
+
+### Model fit
+
+```{r}
+# plot the fitted expected number of new infections and cases over time for each country
+plot_model_fit(stanDF, cid_country, base, 
+               file = "results/brauner/base/compartments.pdf", 
+               npi_labs = c("E", "X", "G", "V", "W", "S", "U", "H"))
+```
+
+### Posterior cor 
+
+```{r}
+# plot posterior correlations between theta_m
+plot_post_pairs(stanDF, base, npi_names, "results/brauner/base/posterior_pairs.pdf")
+```
+
+
+### Influential obs
+
+```{r}
+# plot influential observations by country and time
+plot_influential(stanDF, cid_country, base, "results/brauner/base/influential_observations.pdf")
+```
+
+
+## Theta J
+
+Model including country-specific NPI effects theta_j.
+
+### Summary
+
+```{r}
+cs <- read_cmdstan_csv(list.files("fitted-models/brauner/theta_j/", pattern = "theta_j-.*.csv", full.names = T))
+
+post_summary(cs, c("alpha_0", "lambda", "mu_p_in", "sigma_p_in", "phi_new_cases", "phi_new_infections"))
+post_summary(cs, c(paste0("theta_m[", 1:stanDF$M, "]")))
+post_summary(cs, c("tau[1]", "tau[2]", "psi"))
+
+plot_p_in(stanDF, cs, "results/brauner/theta_j/p_in.pdf")
+
+# posterior correlation between alpha_j and theta_j
+plot_vi_vs(cs, "alpha_j", "theta_j", stanDF$J, cid_country$country, "alpha_j", "theta_j")
+```
+
+### NPI effects
+
+```{r}
+plot_theta_m(stanDF, npi_names, cs, "results/brauner/theta_j/theta_m.pdf")
+```
+
+### CS NPI effects 
+
+```{r}
+# plot country-specific NPI effects theta_j
+plot_theta_j(stan_data = stanDF, cid_country = cid_country, model = cs, file = "results/brauner/theta_j/theta_j.pdf")
+```
+
+### Model fit
+
+```{r}
+plot_model_fit(stan_data = stanDF, cid_country = cid_country, model = cs, 
+               file = "results/brauner/theta_j/compartments.pdf", 
+               npi_labs = c("E", "X", "G", "V", "W", "S", "U", "H"))
+```
+
+### Posterior cor 
+
+```{r}
+plot_post_pairs(stanDF, cs, npi_names, "results/brauner/theta_j/posterior_pairs.pdf")
+```
+
+### Influential obs
+
+```{r}
+plot_influential(stanDF, cid_country, cs, "results/brauner/theta_j/influential_observations.pdf")
+```
+
+### Model comparison
+
+```{r}
+# model comparison between model with and without theta_j
+loo_compare(loo.ragged_mat(stanDF, base), loo.ragged_mat(stanDF, cs))
+```
+
+
+## Theta J Pred
+
+Model including country-specific predictors.
+
+### Single
+
+Estimating the univariate association between theta_j and country-specific predictors for each predictor individually.
+
+```{r}
+# load estimated beta_k
+single_betas <- list()
+for (i in 1:length(pred_vars)) {
+  single_betas[[i]] <- readRDS(paste0("fitted-models/brauner/theta_j_pred/single/theta_j_pred_", pred_vars[i], ".rds"))
+}
+
+# combine
+single_betas_df <- do.call(rbind, single_betas) %>%
+  rename(beta = `beta[1]`) %>%
+  mutate(b = rep(names(pred_vars), each = nrow(single_betas[[1]]))) %>%
+  mutate(beta = 100 * (1-exp(-beta))) %>%
+  group_by(b) %>%
+  mutate(bm = mean(beta)) %>%
+  ungroup()
+  
+# plot
+single_betas_pl <- ggplot() +
+  stat_pointinterval(data = single_betas_df, 
+                     mapping = aes(x = beta, y = reorder(b, beta), color = bm),
+                     shape = 21, point_size = 2, point_fill = "white", .width = c(0.8, 0.95)) +
+  geom_vline(aes(xintercept = 0), linetype = "dotted", color = "grey") +
+  scale_color_gradient2(low = "indianred4", mid = "lightgoldenrod2", high = "steelblue4", midpoint = 0,
+                        breaks = c(-5, 0, 5), labels = c("Lower", "Average", "Higher"), limits = c(-5, 5)) +
+  scale_x_continuous(breaks = seq(-5, 5, 2.5)) +
+  labs(x = "Estimated change (%)", y = "", color = "NPI effect") +
+  theme_bw2() +
+  theme(axis.title.y = element_blank(), legend.position = "bottom")
+
+panel_width = unit(1,"npc") - sum(ggplotGrob(single_betas_pl)[["widths"]][-3]) - unit(1,"line")
+single_betas_pl <- single_betas_pl + guides(color = guide_colorbar(barwidth = panel_width, title.position = "top", title.hjust = 0.5))
+  
+save_plot(single_betas_pl, paste0("results/brauner/theta_j_pred/beta_on_theta_j_single.pdf"), w = 14, h = 8)
+
+# posterior summary of betas
+single_betas_df %>%
+  dplyr::select(-bm) %>%
+  group_by(b) %>%
+  ci_interval() %>%
+  mutate_at(vars(beta, .lower, .upper), round, 1)
+```
+
+
+### Factor
+
+Latent factor model to jointly estimate the association between theta_j and all country-specific predictors
+
+#### Summary
+
+```{r}
+cs_pred <- read_cmdstan_csv(list.files("fitted-models/brauner/theta_j_pred_factor/", pattern = "theta_j_pred_factor-.*.csv", full.names = T))
+
+# number of country-specific predictors and latent dimensions
+# note that the share of the young population is removed as the variable is by definition inversely related to the other population shares
+pred_vars_fct <- pred_vars[-which(pred_vars=="share_age_young")]
+K <- length(pred_vars_fct)
+D <- K-1
+
+post_summary(cs_pred, c("alpha_0", "lambda", "mu_p_in", "sigma_p_in", "phi_new_cases", "phi_new_infections"))
+post_summary(cs_pred, c(paste0("theta_m[", 1:stanDF$M, "]")))
+post_summary(cs_pred, c("tau[1]", "tau[2]"))
+post_summary(cs_pred, paste0("beta[", 1:D, "]")) %>%
+  mutate_at(vars(mean, median, `q2.5`, `q97.5`), function(x) round(100 * (1-exp(-x)), 1))
+post_summary(cs_pred, paste0("psi")) %>%
+  mutate_at(vars(mean, median, `q2.5`, `q97.5`), function(x) round(100 * (1-exp(-x)), 1))
+post_summary(cs_pred, paste0("omicron[", 1:5, "]"))
+```
+
+
+#### Variation
+
+```{r}
+# estimated change in the (unexplained) residual variation between the model with and without country specific predictors
+left_join(
+  as_draws_df(cs$post_warmup_draws[,,"tau[2]"]) %>% rename(tau_j = `tau[2]`), 
+  as_draws_df(cs_pred$post_warmup_draws[,,"tau[2]"]) %>% rename(tau_j_mod = `tau[2]`)) %>%
+  mutate(tau_diff = 100 * (tau_j_mod / tau_j - 1)) %>%
+  dplyr::select(tau_diff) %>%
+  ci_interval() %>%
+  mutate_if(is.numeric, round_k, 0)
+```
+
+#### Loadings
+
+```{r}
+# load estimated loadings
+d_opt <- 2
+lf_names <- c("Latent factor: Wealth", "Latent factor: Demographics")
+loadings <- list()
+i <- 0
+for (k in 1:K) {
+  for (d in 1:d_opt) {
+    i <- i + 1
+    loading_pars <- paste0("W[",k,",",d,"]")
+    loadings[[i]] <- data.frame(as_draws_df(cs_pred$post_warmup_draws[,,loading_pars])) %>%
+      set_names(c("value", ".chain", ".iteration", ".draw")) %>%
+      mutate(d = lf_names[d],
+             k = names(pred_vars_fct)[k])
+  }
+}
+
+# combine
+L <- do.call(rbind, loadings) %>%
+  mutate(d = factor(d, levels = lf_names),
+         k = factor(k, levels = rev(names(pred_vars_fct))))
+
+# plot
+L_pl <- ggplot(L, aes(y = k, x = value)) +
+  facet_wrap(~ d) +
+  stat_pointinterval(shape = 21, point_size = 2, fill = "white", .width = c(0.8, 0.95)) +
+  geom_vline(aes(xintercept = 0), linetype = "dotted") +
+  labs(x = "Estimated weight on latent predictor") +
+  theme_bw2() +
+  theme(axis.title.y = element_blank())
+
+save_plot(L_pl, pdf_file = "results/brauner/theta_j_pred_factor/loadings.pdf", w = 12, h = 8)
+```
+
+#### Latent factors
+
+```{r}
+# load estimated latent factors
+d_opt <- 2
+lat_fcts_pars <- character()
+i <- 0
+for (j in 1:stanDF$J) {
+  for (d in 1:d_opt) {
+    i <- i + 1
+    lat_fcts_pars[i] <- paste0("Z[",j,",",d,"]")
+  }
+}
+
+# save posterior mean of latent factors for the sensitivity analysis
+Z <- post_summary(cs_pred, lat_fcts_pars) %>%
+  mutate(d = rep(paste0("Dimension: ", 1:d_opt), stanDF$J),
+         country_id = rep(cid_country$country_id, each = d_opt),
+         country = rep(cid_country$country, each = d_opt))
+
+saveRDS(Z, file = "fitted-models/brauner/theta_j_pred_factor/latent_factors.rds")
+```
+
+
+#### Sensitivity
+
+```{r}
+# load estimates for latent factors from the leave-one-country-out analysis
+sens_res_list <- list()
+for (j in 1:stanDF$J) {
+  mod <- readRDS(paste0("fitted-models/brauner/theta_j_pred_factor/sens/", cid_country$country[j], ".rds"))
+  sens_res_list[[j]] <- data.frame(as_draws_df(mod$draws("beta"))) %>%
+    mutate(country = cid_country$country[j]) %>%
+    dplyr::select(country, everything())
+} 
+
+# combine
+sens_res <- do.call(rbind, sens_res_list)  %>%
+  mutate_at(vars(`beta.1.`, `beta.2.`), function(x) 100 * (1-exp(-x))) %>%
+  set_names(c("country", lf_names, ".chain", ".iteration", ".draw")) %>%
+  reshape2::melt(id.vars = c("country", ".chain", ".iteration", ".draw")) %>%
+  mutate(variable = factor(variable, levels = lf_names)) %>%
+  group_by(country, variable) %>%
+  mutate(mv = mean(value)) %>%
+  ungroup()
+
+# plot
+sens_pl <- ggplot(sens_res, aes(x = value, y = country, color = mv)) +
+  stat_pointinterval(shape = 21, point_size = 2, fill = "white", .width = c(0.8, 0.95)) +
+  facet_wrap(~ variable) +
+  geom_vline(aes(xintercept = 0), linetype = "dotted", color = "grey") +
+  scale_color_gradient2(low = "indianred4", mid = "lightgoldenrod2", high = "steelblue4", midpoint = 0,
+                        breaks = c(-5, 0, 5), labels = c("Lower", "Average", "Higher"), limits = c(-5, 5)) +
+  scale_x_continuous(breaks = seq(-5, 5, 2.5)) +
+  labs(x = "Estimated change (%)", y = "Left-out country", color = "NPI effect") +
+  theme_bw2() +
+  theme(legend.position = "bottom")
+
+panel_width = unit(1,"npc") - sum(ggplotGrob(sens_pl)[["widths"]][-3]) - unit(1,"line")
+sens_pl <- sens_pl + guides(color = guide_colorbar(barwidth = panel_width, title.position = "top", title.hjust = 0.5))
+
+save_plot(sens_pl, "results/brauner/theta_j_pred_factor/sensitivity.pdf", w = 16, h = 16)
+```

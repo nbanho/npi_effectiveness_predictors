@@ -1,3 +1,11 @@
+# Fitted model files
+fitted-models/**/*.rds
+fitted-models/**/*.csv
+simulations/**/.rds
+simulations/**/.pdf
+results/**/.rds
+results/**/.pdf
+
 # History files
 .Rhistory
 .Rapp.history

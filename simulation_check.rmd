@@ -1,0 +1,157 @@
+---
+title: "Fake Data Simulation"
+author: "Nicolas Banholzer"
+date: "4/7/2021"
+output: html_document
+---
+
+## Libraries
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# libraries
+library(tidybayes)
+library(LaplacesDemon)
+library(rstan)
+library(cmdstanr)
+
+# helper functions
+source("utils/covid.R")
+source("utils/tex.R")
+source("utils/plotting.R")
+source("utils/bayes.R")
+source("utils/simulation.R")
+```
+
+
+## Data
+
+```{r}
+# data
+df <- read_csv("data/data_brauner_prep.csv") 
+
+# NPI names
+npi_names <- colnames(dplyr::select(df, -country_id, -country, -date, -cases, -new_cases))
+    
+npi_labs <- c("Gatherings <1000", "Gatherings <100", "Gatherings <10",
+              "Some Businesses\nSuspended", "Most Businesses\nSuspended", 
+              "School\nClosure", "University\nClosure", "Stay Home\nOrder")
+names(npi_labs) <- npi_names
+```
+
+## Setup
+
+```{r}
+# Base model
+base <- read_cmdstan_csv(list.files("fitted-models/brauner/base/", pattern = "base-.*.csv", full.names = T))
+
+# True theta_m
+true_theta <- data.frame(
+  npi = npi_names,
+  effect = post_summary(base, paste0("theta_m[", 1:length(npi_names), "]"))$mean)
+
+# True theta_j
+df_studyPeriod <- start_end(df, npi_names)
+total_C <- df_studyPeriod %>% 
+  group_by(country) %>% 
+  arrange(desc(date)) %>%
+  slice(1) %>%
+  ungroup() %>%
+  dplyr::select(country, cases) %>%
+  arrange(cases) %>%
+  mutate(effect = NA)
+total_C$effect[1] <- 0.1
+total_C$effect[40] <- 0.1
+total_C$effect[seq(2, 12, 2)] <- -0.05
+total_C$effect[seq(3, 13, 2)] <- 0.05
+total_C$effect[seq(30, 38, 2)] <- -0.05
+total_C$effect[seq(31, 39, 2)] <- 0.05
+total_C$effect[14:17] <- c(-0.01, 0.01, -0.01, 0.01)
+total_C$effect[26:29] <- c(-0.01, 0.01, -0.01, 0.01)
+total_C$effect[18:25] <- 0
+total_C <- arrange(total_C, country)
+
+true_theta_j <- data.frame(
+  country = unique(df$country),
+  effect = total_C$effect
+)
+
+sd(true_theta_j$effect)
+
+# Other parameters
+setup_s1 <- list(true_m = true_theta, true_j = true_theta_j,
+                 priors = list(alpha_0 = post_summary(base, "alpha_0")$mean, 
+                               alpha_j = post_summary(base, paste0("alpha_j[", 1:max(df$country_id), "]"))$mean,
+                               mu_p_in = post_summary(base, "mu_p_in")$mean,
+                               sigma_p_in = post_summary(base, "sigma_p_in")$mean,
+                               phi_new_infections = post_summary(base, "phi_new_infections")$mean,
+                               phi_new_cases = post_summary(base, "phi_new_cases")$mean,
+                               new_infections_EpiStart = post_summary(base, paste0("new_infections_EpiStart[", 1:max(df$country_id), "]"))$mean))
+```
+
+```{r}
+# Save setup
+saveRDS(setup_s1, "simulations/theta_j_sim/scenario_1/setup.rds")
+```
+
+## Results
+
+```{r}
+# Get data from simulation
+stan_fits <- list.files("simulations/theta_j_sim/scenario_1", full.names = T)
+stan_fits <- stan_fits[grepl("fit", stan_fits)]
+
+thetas_all <- list()
+thetas_j_all <- list()
+main_pars <- c("alpha_0", "lambda", "xi_new_cases", "phi_new_infections", "mu_p_in", "sigma_p_in",
+               "tau[1]", "tau[2]", paste0("theta_m[", 1:length(npi_names), "]"))
+rhat <- list()
+for (i in 1:length(stan_fits)) {
+  fit <- readRDS(stan_fits[i])
+  thetas_all[[i]] <- fit %>%
+    spread_draws(theta_m[m]) 
+  thetas_j_all[[i]] <- fit %>%
+    spread_draws(theta_j[country]) 
+  rhat[[i]] <- fit$summary(main_pars)$rhat
+}
+
+# check model convergence
+rhat <- do.call(rbind, rhat)
+colnames(rhat) <- main_pars
+rhat <- data.frame(rhat) 
+rhat %>%
+  reshape2::melt() %>%
+  mutate(sim = rep(1:nrow(rhat), times = ncol(rhat))) %>%
+  mutate(value_d = ifelse(value < 1.01, "very good", ifelse(value < 1.1, "good", ifelse(value < 1.2, "bad", "very bad")))) %>%
+  mutate(value_d = factor(value_d, levels = rev(c("very good", "good", "bad", "very bad")))) %>%
+  ggplot(aes(x = sim, y = variable, fill = value_d)) +
+  geom_tile() +
+  scale_fill_brewer(palette = "Spectral") 
+
+# save / load results
+saveRDS(thetas_all, "simulations/theta_j_sim/scenario_1/thetas.rds")
+# thetas_all <- readRDS("simulations/theta_j_sim/scenario_1/thetas.rds")
+saveRDS(thetas_j_all, "simulations/theta_j_sim/scenario_1/thetas_j.rds")
+# thetas_j_all <- readRDS("simulations/theta_j_sim/scenario_1/thetas_j.rds")
+saveRDS(rhat, "simulations/theta_j_sim/scenario_1/rhat.rds")
+# rhat <- readRDS("simulations/theta_j_sim/scenario_1/rhat.rds")
+
+# filter models where parameters did not converge
+thetas_all <- thetas_all[-c(27)]
+thetas_j_all <- thetas_j_all[-c(27)]
+
+# Boxplot theta_m
+theta_boxplot(thetas_all, true_theta, "simulations/theta_j_sim/scenario_1/boxplot.pdf")
+
+# Barchart: theta_m
+theta_barchart(thetas_all, true_theta, "simulations/theta_j_sim/scenario_1/barchart.pdf")
+
+# Boxplot: theta j
+theta_boxplot(thetas_j_all, true_theta_j %>% rename(npi = country), "simulations/theta_j_sim/scenario_1/boxplot_j.pdf", 
+              levs = true_theta_j$country, ordered_levs = arrange(total_C, cases)$country, par = "theta_j", plt_h = 20, plt_w = 16)
+
+# Barchart: theta j
+theta_barchart(thetas_j_all, true_theta_j %>% rename(npi = country), "simulations/theta_j_sim/scenario_1/barchart_j.pdf", 
+               levs = true_theta_j$country, ordered_levs = arrange(total_C, cases)$country, plt_h = 20, plt_w = 16)
+```
