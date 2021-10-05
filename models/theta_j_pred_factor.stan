@@ -13,16 +13,15 @@ data {
 parameters {
 #include pars.stan
   vector[J] alpha_j; // exp(alpha_0 + alpha_j) is the country-specific transmission rate in the absence of NPIs
-  vector<lower=0>[2] tau; // between-country variation for alpha_j and theta_j
+  vector<lower=0>[3] tau; // between-country variation for alpha_j and theta_j, and additive noise for Bayesian PCA
   vector[J] theta_j; // country-specific effect
   real psi; // the effect of alpha_j on theta_j
   vector[D] beta; // the effect of the factor
   // Bayesian PCA:
   matrix[J, D] Z; // latent factors
-	real<lower=0> eps; // additive noise
-	cholesky_factor_cov[K, D] W; // the weight matrix
-	vector<lower=0>[D] omega; // hierarchical prior for inverse variance of W_d
-	vector[K_missing] omicron; // parameters for missing data
+  cholesky_factor_cov[K, D] W; // the weight matrix
+  vector<lower=0>[D] omega; // hierarchical prior for inverse variance of W_d
+  vector[K_missing] omicron; // parameters for missing data
 }
 
 
@@ -79,13 +78,13 @@ model {
   omicron ~ normal(0., 1.);
  
   // priors for Bayesian PCA
-  eps ~ student_t(4., 0., 1.);
-	to_vector(Z) ~ normal(0,1);
-	omega ~ gamma(1e-3, 1e-3);
-	for (d in 1:D) W[ ,d] ~ normal(0., t_omega[d]);
-	
-	//likelihood for Bayesian PCA
-	to_vector(predictors_imp) ~ normal(to_vector(Z*W'), eps);
+  tau[3] ~ student_t(4., 0., 1.);
+  to_vector(Z) ~ normal(0,1);
+  omega ~ gamma(1e-3, 1e-3);
+  for (d in 1:D) W[ ,d] ~ normal(0., t_omega[d]);
+  
+  //likelihood for Bayesian PCA
+  to_vector(predictors_imp) ~ normal(to_vector(Z*W'), tau[3]);
 
   // likelihood
 #include likelihood.stan
